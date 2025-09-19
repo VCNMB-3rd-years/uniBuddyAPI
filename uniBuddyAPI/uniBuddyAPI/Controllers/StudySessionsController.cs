@@ -2,7 +2,7 @@
 
 namespace uniBuddyAPI.Controllers
 {
-    public class TimerController : Controller
+    public class StudySessionsController : Controller
     {
         public IActionResult Index()
         {
