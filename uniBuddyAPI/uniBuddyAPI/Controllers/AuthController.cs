@@ -12,7 +12,10 @@ namespace uniBuddyAPI.Controllers
     public class AuthController : Controller
     {
         private readonly RealTimeDbService _db;
-        public AuthController(RealTimeDbService db) => _db = db;
+        public AuthController(RealTimeDbService db)
+        {
+            _db = db;
+        }
 
 
 

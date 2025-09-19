@@ -11,7 +11,10 @@ namespace uniBuddyAPI.Controllers
     public class GoalsController : ControllerBase
     {
         private readonly RealTimeDbService _db;
-        public GoalsController(RealTimeDbService db) => _db = db;
+        public GoalsController(RealTimeDbService db)
+        {
+            _db = db;
+        }
 
         // GET returns the goals for the student
         [HttpGet]

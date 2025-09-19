@@ -11,7 +11,10 @@ namespace uniBuddyAPI.Controllers
     public class TimetableController : ControllerBase
     {
         private readonly RealTimeDbService _db;
-        public TimetableController(RealTimeDbService db) => _db = db;
+        public TimetableController(RealTimeDbService db)
+        {
+            _db = db;
+        }
 
         // GET will return the timetable for the student
         [HttpGet]
@@ -24,6 +27,11 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(json) || json == "null")
                 return Ok(new List<Timetable>());
 
+            //Code Attribution
+            //The PropertyNameCaseInsensitive option has been created with the help of StackOverflow
+            //https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working
+            //Ziaullah Khan
+            //https://stackoverflow.com/users/3312570/ziaullah-khan
             var list = JsonSerializer.Deserialize<List<Timetable>>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
