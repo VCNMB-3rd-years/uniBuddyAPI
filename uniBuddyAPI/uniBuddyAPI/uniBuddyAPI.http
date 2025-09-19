@@ -1,0 +1,6 @@
+@uniBuddyAPI_HostAddress = http://localhost:5291
+
+GET {{uniBuddyAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
