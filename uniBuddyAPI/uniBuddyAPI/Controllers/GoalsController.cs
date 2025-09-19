@@ -8,7 +8,7 @@ namespace uniBuddyAPI.Controllers
     [ApiController]
     [Route("goals")]
     [Produces("application/json")]
-    public class GoalsController : ControllerBase
+    public class GoalsController : Controller
     {
         private readonly RealTimeDbService _db;
         public GoalsController(RealTimeDbService db)

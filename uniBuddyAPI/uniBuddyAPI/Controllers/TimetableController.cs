@@ -8,7 +8,7 @@ namespace uniBuddyAPI.Controllers
     [ApiController]
     [Route("timetable")]
     [Produces("application/json")]
-    public class TimetableController : ControllerBase
+    public class TimetableController : Controller
     {
         private readonly RealTimeDbService _db;
         public TimetableController(RealTimeDbService db)
