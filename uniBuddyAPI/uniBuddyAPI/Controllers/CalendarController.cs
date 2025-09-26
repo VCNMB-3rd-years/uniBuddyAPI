@@ -84,7 +84,7 @@ namespace uniBuddyAPI.Controllers
             {
                 foreach (var entry in map)
                 {
-                    entry.Value.EventId = entry.Key;  //firebase key as event id
+                    entry.Value.EventId = entry.Key; //firebase key as event id
                     entry.Value.UserId = userId;
                     list.Add(entry.Value);
                 }
