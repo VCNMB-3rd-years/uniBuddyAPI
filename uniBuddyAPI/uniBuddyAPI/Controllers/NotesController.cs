@@ -78,16 +78,14 @@ namespace uniBuddyAPI.Controllers
             var list = new List<Note>();
             if (map != null)
             {
-                //foreach (var (key, value) in map)
-                //{
-                //    value.NoteId = string.IsNullOrWhiteSpace(value.NoteId) ? key : value.NoteId;
-                //    list.Add(value);
-                //}
                 foreach (var entry in map)
                 {
-                    entry.Value.NoteId = entry.Key; //add each note into the list
+                    var note = entry.Value;
+                    note.NoteId = string.IsNullOrWhiteSpace(note.NoteId) ? entry.Key : note.NoteId; //use Firebase key
+                    list.Add(note);
                 }
             }
+
 
             if (!string.IsNullOrWhiteSpace(moduleId)) //module filter
             {
