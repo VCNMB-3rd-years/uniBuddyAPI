@@ -18,14 +18,24 @@ namespace uniBuddyAPI.Controllers
         }
 
         [HttpPost("{userId}")]
-        //new study session for a specific user (logged in user)
-        public async Task<IActionResult> AddSession(string userId, [FromBody] StudySession body)
+        // new study session for a specific user (logged in user)
+        public async Task<IActionResult> AddSession(string userId, [FromBody] StudySessionReqest body)
         {
             if (string.IsNullOrWhiteSpace(userId))
                 return BadRequest(new { message = "The userId is required" }); //user must be logged in
+            if (body is null)
+                return BadRequest(new { message = "Request body is required" });
 
-            var start = body.StartTime == default ? DateTime.UtcNow : body.StartTime; //start time defaults to NOW
-            DateTime? end = body.EndTime; //when the user stops the timer thats the end time
+
+            var start = string.IsNullOrWhiteSpace(body.StartTime)
+                ? DateTime.UtcNow
+                : DateTimeOffset.Parse(body.StartTime).UtcDateTime;
+
+            DateTime? end = string.IsNullOrWhiteSpace(body.EndTime)
+                ? (DateTime?)null
+                : DateTimeOffset.Parse(body.EndTime!).UtcDateTime;
+
+
 
             var duration = body.Duration;
             if (duration <= 0 && end.HasValue)
@@ -45,7 +55,7 @@ namespace uniBuddyAPI.Controllers
             var response = await _db.Client.PostAsJsonAsync($"/studySession/{userId}.json", session); //posting to firebase
             var fbText = await response.Content.ReadAsStringAsync(); //reading the response from firebase
 
-            if (response.IsSuccessStatusCode) 
+            if (response.IsSuccessStatusCode)
             {
                 return Ok(new
                 {
@@ -61,6 +71,7 @@ namespace uniBuddyAPI.Controllers
                 firebase = fbText
             });
         }
+
 
 
         [HttpGet("{userId}")] //getting the logged in users study sessions
