@@ -81,7 +81,7 @@ namespace uniBuddyAPI.Controllers
                 foreach (var entry in map)
                 {
                     var note = entry.Value;
-                    note.NoteId = string.IsNullOrWhiteSpace(note.NoteId) ? entry.Key : note.NoteId; //use Firebase key
+                    note.NoteId = string.IsNullOrWhiteSpace(note.NoteId) ? entry.Key : note.NoteId; //use Firebase key if note id is null
                     list.Add(note);
                 }
             }
