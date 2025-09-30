@@ -93,32 +93,33 @@ namespace uniBuddyAPI.Controllers
             return Unauthorized(new { message = "Invalid email or password." });
         }
 
-
-        [HttpPost("password/change")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+        [HttpPost("check-user")]
+        public async Task<IActionResult> CheckUser([FromBody] CheckUserRequest request)
         {
-            if (req == null || string.IsNullOrWhiteSpace(req.UserId) || string.IsNullOrWhiteSpace(req.CurrentPassword) || string.IsNullOrWhiteSpace(req.NewPassword))
-                return BadRequest(new { message = "userId, currentPassword and newPassword are required." });
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "Email is required." });
 
-            var get = await _db.Client.GetAsync($"/users/{req.UserId}.json");
-            if (!get.IsSuccessStatusCode) return BadRequest(new { message = "User not found." });
+            var res = await _db.Client.GetAsync("/users.json");
+            if (!res.IsSuccessStatusCode) return Unauthorized(new { message = "Failed to access users." });
 
-            var json = await get.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(json) || json == "null") return BadRequest(new { message = "User not found." });
+            var body = await res.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(body) || body == "null")
+                return NotFound(new { message = "No users found." });
 
-            var user = JsonSerializer.Deserialize<User>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash))
-                return BadRequest(new { message = "Invalid user record." });
+            var users = JsonSerializer.Deserialize<Dictionary<string, User>>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
 
-            if (!BCrypt.Net.BCrypt.Verify(req.CurrentPassword, user.PasswordHash))
-                return BadRequest(new { message = "Current password is incorrect." });
+            var email = request.Email.Trim().ToLower();
+            foreach (var kv in users)
+            {
+                var u = kv.Value;
+                if ((u.Email?.Trim().ToLower()) == email)
+                    return Ok(new { exists = true, userId = u.UserId ?? kv.Key });
+            }
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
-
-            var put = await _db.Client.PutAsJsonAsync($"/users/{req.UserId}.json", user);
-            if (!put.IsSuccessStatusCode) return BadRequest(new { message = "Failed to update password." });
-
-            return Ok(new { message = "Password updated." });
+            return Ok(new { exists = false });
         }
     }
 }
