@@ -86,7 +86,7 @@ namespace uniBuddyAPI.Controllers
                     BCrypt.Net.BCrypt.Verify(request.Password, u.PasswordHash))
                 {
                     var resolvedUserId = string.IsNullOrWhiteSpace(u.UserId) ? kv.Key : u.UserId;
-                    return Ok(new LoginResponse { Message = "Login successful", UserId = resolvedUserId! });
+                    return Ok(new LoginResponse { Message = "Login successful", UserId = resolvedUserId!, name = u.Name ?? "", surname = u.Surname ?? "" });
                 }
             }
 
