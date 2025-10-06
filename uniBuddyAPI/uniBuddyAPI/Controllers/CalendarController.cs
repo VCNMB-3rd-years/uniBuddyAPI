@@ -92,9 +92,7 @@ namespace uniBuddyAPI.Controllers
 
             if (!string.IsNullOrWhiteSpace(courseId))
             {
-                list = list
-                    .Where(e => string.Equals(e.CourseId, courseId, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                list = list.Where(e => string.Equals(e.CourseId, courseId, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
             return Ok(list);

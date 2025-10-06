@@ -5,6 +5,7 @@ using uniBuddyAPI.Services;
 
 namespace uniBuddyAPI.Controllers
 {
+    //NOT OPERATIONAL YET !!
     [ApiController]
     [Route("goals")]
     [Produces("application/json")]
