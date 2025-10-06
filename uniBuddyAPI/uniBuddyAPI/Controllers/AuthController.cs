@@ -111,11 +111,6 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(body) || body == "null")
                 return NotFound(new { message = "No users found." });
 
-            //Code Attribution
-            //The PropertyNameCaseInsensitive option has been created with the help of StackOverflow
-            //https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working
-            //Ziaullah Khan
-            //https://stackoverflow.com/users/3312570/ziaullah-khan
             var users = JsonSerializer.Deserialize<Dictionary<string, User>>(body, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -126,11 +121,12 @@ namespace uniBuddyAPI.Controllers
             {
                 var u = kv.Value;
                 if ((u.Email?.Trim().ToLower()) == email)
-                    return Ok(new { exists = true, userId = u.UserId ?? kv.Key });  //return user id and fb key if found
+                    return Ok(new { exists = true, userId = u.UserId ?? kv.Key, name = u.Name ?? "", surname = u.Surname ?? "" });
             }
 
-            return Ok(new { exists = false }); //if no user is found with the provided email
+            return Ok(new { exists = false });
         }
+
 
         [HttpPost("password/change")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
