@@ -17,8 +17,8 @@ namespace uniBuddyAPI.Controllers
             _db = db;
         }
 
-        [HttpPost("{userId}")] //adding a calendar event
-        public async Task<IActionResult> AddEvent(string userId, [FromBody] CalendarEvent body)
+        [HttpPost("{userId}")] //adding a calendar event for logged in user
+        public async Task<IActionResult> AddEvent(string userId, [FromBody] CalendarEvent body) 
         {
             if (string.IsNullOrWhiteSpace(userId))
                 return BadRequest(new { message = "The userId is required" });
@@ -37,14 +37,14 @@ namespace uniBuddyAPI.Controllers
                 EventDate = body.EventDate?.Trim() //"yyyy-MM-dd"
             };
 
-            var response = await _db.Client.PostAsJsonAsync($"/calendar-events/{userId}.json", evnt);
+            var response = await _db.Client.PostAsJsonAsync($"/calendar-events/{userId}.json", evnt); //post to firebase
 
             if (response.IsSuccessStatusCode)
             {
-                var resultContent = await response.Content.ReadAsStringAsync();
-                return Ok(new { message = "Event saved successfully", data = resultContent });
+                var resultContent = await response.Content.ReadAsStringAsync(); //reading the firebase response
+                return Ok(new { message = "Event saved successfully", data = resultContent }); // when events save successfully then return success
             }
-            return BadRequest(new { message = "Failed to save your event" });
+            return BadRequest(new { message = "Failed to save your event" }); //bad request if fail to save
         }
 
         [HttpGet("{userId}")] //getting the logged-in user's events
@@ -53,15 +53,15 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(userId))
                 return BadRequest(new { message = "The userId is required" });
 
-            var response = await _db.Client.GetAsync($"/calendar-events/{userId}.json");
+            var response = await _db.Client.GetAsync($"/calendar-events/{userId}.json"); //getting calendar events from firebase
             if (!response.IsSuccessStatusCode)
-                return BadRequest(new { message = "Could not load events" });
+                return BadRequest(new { message = "Could not load events" }); //if none then return this bad req
 
             var json = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(json) || json == "null")
+            if (string.IsNullOrWhiteSpace(json) || json == "null") //tell user theres no events if nothing in fb
                 return NotFound(new { message = "you have no events saved yet" });
 
-            Dictionary<string, CalendarEvent>? map;
+            Dictionary<string, CalendarEvent>? usersEvents;
             try
             {
                 //Code Attribution
@@ -69,7 +69,7 @@ namespace uniBuddyAPI.Controllers
                 //https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working
                 //Ziaullah Khan
                 //https://stackoverflow.com/users/3312570/ziaullah-khan
-                map = JsonSerializer.Deserialize<Dictionary<string, CalendarEvent>>(json, new JsonSerializerOptions
+                usersEvents = JsonSerializer.Deserialize<Dictionary<string, CalendarEvent>>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -80,12 +80,12 @@ namespace uniBuddyAPI.Controllers
             }
 
             var list = new List<CalendarEvent>();
-            if (map != null)
+            if (usersEvents != null)
             {
-                foreach (var entry in map)
+                foreach (var entry in usersEvents)
                 {
                     entry.Value.EventId = entry.Key; //firebase key as event id
-                    entry.Value.UserId = userId;
+                    entry.Value.UserId = userId; //making sure user id is set
                     list.Add(entry.Value);
                 }
             }
@@ -95,49 +95,49 @@ namespace uniBuddyAPI.Controllers
                 list = list.Where(e => string.Equals(e.CourseId, courseId, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
-            return Ok(list);
+            return Ok(list); //return list of users events
         }
 
-        [HttpDelete("{userId}/{eventId}")] //deleting a specific event
+        [HttpDelete("{userId}/{eventId}")] //deleting a specific event for a user
         public async Task<IActionResult> DeleteEvent(string userId, string eventId)
         {
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(eventId))
-                return BadRequest(new { message = "userId and eventId are required" });
+                return BadRequest(new { message = "userId and eventId are required" }); //cant get anything if no logged in user (just error handling)
 
-            var response = await _db.Client.DeleteAsync($"/calendar-events/{userId}/{eventId}.json");
+            var response = await _db.Client.DeleteAsync($"/calendar-events/{userId}/{eventId}.json"); //deleting from firebase
 
             if (response.IsSuccessStatusCode)
                 return Ok(new { message = "Event deleted" });
 
-            return BadRequest(new { message = "Could not delete event" });
+            return BadRequest(new { message = "Could not delete event" }); //if delete failed 
         }
 
         [HttpGet("global")] //read-only global (preloaded) events
         public async Task<IActionResult> GetGlobalEvents([FromQuery] string? courseId = null)
         {
-            var response = await _db.Client.GetAsync("/calendar-global.json");
+            var response = await _db.Client.GetAsync("/calendar-global.json"); //reading all proloaded global events from firebase
             if (!response.IsSuccessStatusCode) return BadRequest(new { message = "Could not load global events" });
 
-            var json = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(json) || json == "null") return Ok(new List<CalendarEvent>());
+            var json = await response.Content.ReadAsStringAsync(); 
+            if (string.IsNullOrWhiteSpace(json) || json == "null") return Ok(new List<CalendarEvent>()); //return empty list if nothing found 
 
-            Dictionary<string, CalendarEvent>? map;
+            Dictionary<string, CalendarEvent>? globalEvents;
             try
             {
-                map = JsonSerializer.Deserialize<Dictionary<string, CalendarEvent>>(json, new JsonSerializerOptions
+                globalEvents = JsonSerializer.Deserialize<Dictionary<string, CalendarEvent>>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
             }
             catch
             {
-                return Ok(new List<CalendarEvent>());
+                return Ok(new List<CalendarEvent>()); //try catch to ensure no crashing of api on fail
             }
 
-            var list = new List<CalendarEvent>();
-            if (map != null)
+            var list = new List<CalendarEvent>(); //dictionary to list and theres no user id bc global events for everyone
+            if (globalEvents != null)
             {
-                foreach (var entry in map)
+                foreach (var entry in globalEvents)
                 {
                     entry.Value.EventId = entry.Key; //Firebase key
                     //UserId stays null for global
@@ -146,7 +146,7 @@ namespace uniBuddyAPI.Controllers
             }
 
             if (!string.IsNullOrWhiteSpace(courseId))
-                list = list.Where(e => string.Equals(e.CourseId, courseId, StringComparison.OrdinalIgnoreCase)).ToList();
+                list = list.Where(e => string.Equals(e.CourseId, courseId, StringComparison.OrdinalIgnoreCase)).ToList(); //filtering by courseId
             return Ok(list);
         }
     }
