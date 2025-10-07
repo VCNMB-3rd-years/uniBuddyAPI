@@ -57,7 +57,7 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(json) || json == "null")
                 return NotFound(new { message = "you have no notes saved yet" }); //errir message if user has no notes
 
-            Dictionary<string, Note>? map;
+            Dictionary<string, Note>? usersNotes;
             try
             //Code Attribution
             //The PropertyNameCaseInsensitive option has been created with the help of StackOverflow
@@ -65,7 +65,7 @@ namespace uniBuddyAPI.Controllers
             //Ziaullah Khan
             //https://stackoverflow.com/users/3312570/ziaullah-khan
             {
-                map = JsonSerializer.Deserialize<Dictionary<string, Note>>(json, new JsonSerializerOptions //deserialize the json from firebase into the dictionary
+                usersNotes = JsonSerializer.Deserialize<Dictionary<string, Note>>(json, new JsonSerializerOptions //deserialize the json from firebase into the dictionary
                 {
                     PropertyNameCaseInsensitive = true //just making sure the moduleId is not case sensitive as its moduleId in firebase
                 });
@@ -76,9 +76,9 @@ namespace uniBuddyAPI.Controllers
             }
 
             var list = new List<Note>();
-            if (map != null)
+            if (usersNotes != null)
             {
-                foreach (var entry in map)
+                foreach (var entry in usersNotes)
                 {
                     var note = entry.Value;
                     note.NoteId = string.IsNullOrWhiteSpace(note.NoteId) ? entry.Key : note.NoteId; //use Firebase key if note id is null

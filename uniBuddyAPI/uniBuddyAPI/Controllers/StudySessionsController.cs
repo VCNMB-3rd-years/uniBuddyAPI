@@ -85,7 +85,7 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(json) || json == "null")
                 return NotFound(new { message = "You have no recorded study sessions" });
 
-            Dictionary<string, StudySession>? map; //getting all study sessions for logged in user, stored in dictionary
+            Dictionary<string, StudySession>? usersSessions; //getting all study sessions for logged in user, stored in dictionary
             try
             {
                 //Code Attribution
@@ -93,7 +93,7 @@ namespace uniBuddyAPI.Controllers
                 //https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working
                 //Ziaullah Khan
                 //https://stackoverflow.com/users/3312570/ziaullah-khan
-                map = JsonSerializer.Deserialize<Dictionary<string, StudySession>>(json, new JsonSerializerOptions
+                usersSessions = JsonSerializer.Deserialize<Dictionary<string, StudySession>>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -104,9 +104,9 @@ namespace uniBuddyAPI.Controllers
             }
 
             var list = new List<StudySession>();
-            if (map != null)
+            if (usersSessions != null)
             {
-                foreach (var (key, value) in map)
+                foreach (var (key, value) in usersSessions)
                 {
                     //firebase key is the session id
                     value.SessionId = string.IsNullOrWhiteSpace(value.SessionId) ? key : value.SessionId; //session id is the firebase key

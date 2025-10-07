@@ -41,12 +41,12 @@ namespace uniBuddyAPI.Controllers
                
             }
 
-            var map = JsonSerializer.Deserialize<Dictionary<string, Goal>>(json, new JsonSerializerOptions
+            var userGoals = JsonSerializer.Deserialize<Dictionary<string, Goal>>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            return Ok(map?.Values?.ToList() ?? new List<Goal>());
+            return Ok(userGoals?.Values?.ToList() ?? new List<Goal>());
         }
     }
 }
