@@ -1,4 +1,3 @@
-//using uniBuddyAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using uniBuddyAPI.Services;
 
@@ -10,8 +9,6 @@ namespace uniBuddyAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //builder.Services.AddDbContext<AppDbContext>(opt =>
-            //    opt.UseInMemoryDatabase("UniBuddyDb"));
 
             builder.Services.AddSingleton<RealTimeDbService>();
 
