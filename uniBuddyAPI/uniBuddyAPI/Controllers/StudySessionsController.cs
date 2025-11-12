@@ -117,6 +117,51 @@ namespace uniBuddyAPI.Controllers
             //returning the most recent start time first in the list of study sessions
             return Ok(list.OrderByDescending(s => s.StartTime).ToList());
         }
+
+        [HttpGet("{userId}/summary")]
+        public async Task<IActionResult> GetSummary(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return BadRequest(new { message = "The userId is required" });
+
+            var response = await _db.Client.GetAsync($"/studySession/{userId}.json");
+            if (!response.IsSuccessStatusCode)
+                return BadRequest(new { message = "Could not load your study sessions" });
+
+            var json = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(json) || json == "null")
+                return Ok(new { totalMinutes = 0, todayMinutes = 0, weekMinutes = 0 });
+
+            Dictionary<string, StudySession>? map;
+            try
+            {
+                map = JsonSerializer.Deserialize<Dictionary<string, StudySession>>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+            }
+            catch
+            {
+                //returning 0 for each so that nothing crashes
+                return Ok(new { totalMinutes = 0, todayMinutes = 0, weekMinutes = 0 });
+            }
+
+            var list = (map ?? new()).Values;
+
+            //total time spent studying or using the study timer
+            var total = list.Sum(s => s.Duration);
+
+            //time spent studying today
+            var todayUtc = DateTime.UtcNow.Date;
+            var today = list.Where(s => s.StartTime.Date == todayUtc).Sum(s => s.Duration);
+
+            //time spent studying in the last 7 days
+            var weekStart = todayUtc.AddDays(-6);
+            var week = list.Where(s => s.StartTime.Date >= weekStart && s.StartTime.Date <= todayUtc)
+                           .Sum(s => s.Duration);
+
+            return Ok(new { totalMinutes = total, todayMinutes = today, weekMinutes = week });
+        }
     }
 }
 
