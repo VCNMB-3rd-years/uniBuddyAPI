@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
 using System.Text.Json;
 using uniBuddyAPI.Models;
 using uniBuddyAPI.Services;
@@ -82,6 +83,7 @@ namespace uniBuddyAPI.Controllers
                 ("notes_20", "Write 20 notes to earn a Toastie of your choice", "notesCount", 20)
             };
 
+            //loading vouchers already earned
             var earned = await LoadEarned(userId);
             var earnedIds = new HashSet<string>(earned.Select(v => v.VoucherId), StringComparer.OrdinalIgnoreCase);
 
@@ -90,6 +92,7 @@ namespace uniBuddyAPI.Controllers
 
             foreach (var (id, title, metric, threshold) in rules)
             {
+                //current value for metric so notes or mins
                 var current = metrics.TryGetValue(metric, out var val) ? val : 0;
                 var achieved = current >= threshold;  //when amount is over threshold
                 var percent = threshold > 0 ? Math.Min(100, (int)Math.Round(current * 100.0 / threshold)) : 0; //capped at 100%
@@ -105,8 +108,9 @@ namespace uniBuddyAPI.Controllers
                     Achieved = achieved
                 });
 
-                if (achieved && !earnedIds.Contains(id))
+                if (achieved && !earnedIds.Contains(id)) //if user achieved and not already earned then award voucher
                 {
+                    //earned voucher object
                     var award = new EarnedVoucher 
                     {
                         VoucherId = id,
@@ -130,13 +134,18 @@ namespace uniBuddyAPI.Controllers
         private async Task<List<EarnedVoucher>> LoadEarned(string userId)
         {
             var response = await _db.Client.GetAsync($"/vouchers/{userId}.json");
-            if (!response.IsSuccessStatusCode) return new List<EarnedVoucher>();
+            if (!response.IsSuccessStatusCode) return new List<EarnedVoucher>(); //return empty list if no vouchers found (error)
 
             var body = await response.Content.ReadAsStringAsync();
             if (string.IsNullOrWhiteSpace(body) || body == "null") return new List<EarnedVoucher>();
 
             try
             {
+                //Code Attribution
+                //The PropertyNameCaseInsensitive option has been created with the help of StackOverflow
+                //https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working
+                //Ziaullah Khan
+                //https://stackoverflow.com/users/3312570/ziaullah-khan
                 var earned = JsonSerializer.Deserialize<Dictionary<string, EarnedVoucher>>(body, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -183,6 +192,7 @@ namespace uniBuddyAPI.Controllers
             }
         }
 
+        //counting how many note objects there are for the user in fb
         private async Task<int> CountNotes(string userId)
         {
             var response = await _db.Client.GetAsync($"/notes/{userId}.json");
@@ -196,12 +206,13 @@ namespace uniBuddyAPI.Controllers
                 using var doc = JsonDocument.Parse(body);
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 {
+                    //returning count of notes for the user from firebase
                     return doc.RootElement.GetArrayLength();
                 }
-                else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                else if (doc.RootElement.ValueKind == JsonValueKind.Object) //checking that the root is an object in firebase
                 {
-                    int count = 0;
-                    foreach (var _ in doc.RootElement.EnumerateObject()) count++;
+                    int count = 0; //counter to count note objects
+                    foreach (var _ in doc.RootElement.EnumerateObject()) count++; //increment counter for each note object
                     return count;
                 }
                 return 0;
