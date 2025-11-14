@@ -226,4 +226,5 @@ namespace uniBuddyAPI.Controllers
     }
 }
 //Reference List
+//Khan, Z. 2020. JSON.NET Case Insensitive Deserialization not working. [Online]. StackOverflow. Available at: https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working [Accessed 20 October 2025].
 //Lee, W.H. 2021. How can I generate random alphanumeric strings? [Online]. StackOverflow. Available at: https://stackoverflow.com/questions/1344221/how-can-i-generate-random-alphanumeric-strings [Accessed 3 November 2025].

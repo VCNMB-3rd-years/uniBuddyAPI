@@ -50,3 +50,6 @@ namespace uniBuddyAPI.Controllers
         }
     }
 }
+
+//Reference List:
+//Khan, Z. 2020. JSON.NET Case Insensitive Deserialization not working. [Online]. StackOverflow. Available at: https://stackoverflow.com/questions/45782127/json-net-case-insensitive-deserialization-not-working [Accessed 20 September 2025].
