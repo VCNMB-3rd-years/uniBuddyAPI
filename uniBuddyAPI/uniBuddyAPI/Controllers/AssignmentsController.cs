@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using uniBuddyAPI.Models;
 using uniBuddyAPI.Services;
@@ -11,11 +14,13 @@ namespace uniBuddyAPI.Controllers
     public class AssignmentsController : Controller
     {
         private readonly RealTimeDbService _db;
+
+        //Initialize Firebase app
+        private static bool _firebaseInitialized = false;
         public AssignmentsController(RealTimeDbService db)
         {
             _db = db;
         }
-
 
         [HttpPost("{assignmentId}/{userId}")]
         public async Task<IActionResult> Create(string assignmentId, string userId, [FromBody] AssignmentuploadRequest body)
@@ -29,7 +34,6 @@ namespace uniBuddyAPI.Controllers
             if (string.IsNullOrWhiteSpace(body.FileName) || string.IsNullOrWhiteSpace(body.FileUrl))
                 return BadRequest(new { message = "fileName and fileUrl are required" });
 
-
             var upload = new AssignmentUpload
             {
                 AssignmentId = assignmentId,
@@ -39,29 +43,25 @@ namespace uniBuddyAPI.Controllers
                 UploadedAt = DateTime.UtcNow
             };
 
-
             var response = await _db.Client.PostAsJsonAsync($"/assignmentUploads/{assignmentId}/{userId}.json", upload);
             var fbText = await response.Content.ReadAsStringAsync();
 
-
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                return Ok(new
+                return BadRequest(new
                 {
-                    message = "Upload saved",
-                    data = fbText
+                    message = "Upload save failed",
+                    status = (int)response.StatusCode,
+                    firebase = fbText
                 });
             }
 
-
-            return BadRequest(new
+            return Ok(new
             {
-                message = "Upload save failed",
-                status = (int)response.StatusCode,
-                firebase = fbText
+                message = "Upload saved",
+                data = fbText
             });
         }
-
 
         [HttpGet("{assignmentId}/{userId}")]
         public async Task<IActionResult> GetForUser(string assignmentId, string userId)
@@ -105,7 +105,6 @@ namespace uniBuddyAPI.Controllers
 
             return Ok(list.OrderByDescending(u => u.UploadedAt).ToList());
         }
-
     }
 }
 
